@@ -89,10 +89,26 @@ fn generate_bindings() {
 }
 
 fn clone_wireshark_or_die() {
-    Command::new("git")
-        .args(["submodule", "update", "--init", "--recursive", "wireshark"])
+    if let Ok(dir) = std::fs::metadata("wireshark") {
+        assert!(dir.is_dir(), "Wireshark directory should be dir");
+    } else {
+        let output = Command::new("git")
+            .args([
+                "clone",
+                "https://gitlab.com/wireshark/wireshark.git",
+                "--recurse-submodules",
+            ])
+            .output()
+            .expect("wireshark should be obtained as a git submodule");
+        assert!(output.status.success(), "Failed to clone wireshark");
+    }
+
+    // Checkout version 4.2
+    let output = Command::new("git")
+        .args(["--work-tree=wireshark", "checkout", "v4.2.0"])
         .output()
-        .expect("wireshark should be obtained as a git submodule");
+        .expect("wireshark should have version 4.2");
+    assert!(output.status.success(), "Failed to checkout wireshark 4.2");
 }
 
 fn build_wireshark() -> PathBuf {
