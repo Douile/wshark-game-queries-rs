@@ -9,4 +9,4 @@ license = "MIT"
 crate-type = ["cdylib"]
 
 [dependencies]
-wsdf = "0.1.2"
+wsdf = { path = "../wsdf" }

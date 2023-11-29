@@ -1,9 +1,9 @@
 use wsdf::tap::{Field, Offset, Packet};
-use wsdf::{Dispatch, Protocol, ProtocolField};
+use wsdf::Dissect;
 
 /// A null delimited string
-#[derive(ProtocolField)]
-pub struct DelimString(#[wsdf(consume_with = "consume_string")] Vec<u8>);
+#[derive(Dissect)]
+pub struct DelimString(#[wsdf(bytes, consume_with = "consume_string")] Vec<u8>);
 
 const STRING_DELIM: u8 = 0;
 
@@ -34,7 +34,7 @@ fn consume_string(Offset(offset): Offset, Packet(pkt): Packet) -> (usize, String
 }
 
 /// A u8 that is true if 1
-#[derive(ProtocolField)]
+#[derive(Dissect)]
 pub struct BoolU8(#[wsdf(decode_with = "decode_bool")] u8);
 
 fn decode_bool(Field(b): Field<u8>) -> &'static str {

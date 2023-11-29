@@ -1,13 +1,13 @@
 use wsdf::tap::{Offset, Packet};
-use wsdf::ProtocolField;
+use wsdf::Dissect;
 
-#[derive(ProtocolField)]
+#[derive(Dissect)]
 pub struct ValveResponseChallenge {
     challenge: u32,
 }
 
-#[derive(ProtocolField)]
-pub struct OptionalChallenge(#[wsdf(consume_with = "consume_optional")] Vec<u8>);
+#[derive(Dissect)]
+pub struct OptionalChallenge(#[wsdf(bytes, consume_with = "consume_optional")] Vec<u8>);
 
 fn consume_optional(Offset(offset): Offset, Packet(pkt): Packet) -> (usize, String) {
     if offset == pkt.len() {

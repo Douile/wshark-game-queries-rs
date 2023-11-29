@@ -1,16 +1,16 @@
 use wsdf::tap::Field;
-use wsdf::ProtocolField;
+use wsdf::Dissect;
 
 use crate::challenge::OptionalChallenge;
 use crate::primatives::{BoolU8, DelimString};
 
-#[derive(ProtocolField)]
+#[derive(Dissect)]
 pub struct ValveRequestInfo {
     payload: [u8; 20],
     challenge: OptionalChallenge,
 }
 
-#[derive(ProtocolField)]
+#[derive(Dissect)]
 pub struct ValveResponseInfo {
     protocol_version: u8,
     name: DelimString,

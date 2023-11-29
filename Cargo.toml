@@ -1,5 +1,13 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/valve"
+    # WSDF
+    "crates/wsdf",
+    "crates/wsdf-derive",
+    "crates/epan-sys",
+
+    # Dissectors
+    "crates/valve",
+    "crates/minecraft-java",
+    "crates/minecraft-bedrock"
 ]

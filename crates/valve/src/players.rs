@@ -1,25 +1,25 @@
 use wsdf::tap::Field;
-use wsdf::ProtocolField;
+use wsdf::Dissect;
 
 use crate::challenge::ValveResponseChallenge;
 use crate::primatives::DelimString;
 
 pub type ValveRequestPlayers = ValveResponseChallenge;
 
-#[derive(ProtocolField)]
+#[derive(Dissect)]
 pub struct ValveResponsePlayers {
     players_len: u8,
     #[wsdf(len_field = "players_len")]
     players: Vec<ValvePlayer>,
 }
 
-#[derive(ProtocolField)]
+#[derive(Dissect)]
 pub struct ValvePlayer {
     index: u8,
     name: DelimString,
     #[wsdf(enc = "ENC_LITTLE_ENDIAN")]
     score: i32,
-    #[wsdf(decode_with = "decode_f32_le")]
+    #[wsdf(bytes, decode_with = "decode_f32_le")]
     duration: [u8; 4],
 }
 

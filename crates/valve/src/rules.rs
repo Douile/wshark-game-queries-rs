@@ -1,17 +1,17 @@
-use wsdf::ProtocolField;
+use wsdf::Dissect;
 
 use crate::{challenge::ValveResponseChallenge, primatives::DelimString};
 
 pub type ValveRequestRules = ValveResponseChallenge;
 
-#[derive(ProtocolField)]
+#[derive(Dissect)]
 pub struct ValveResponseRules {
     rules_len: u8,
     #[wsdf(len_field = "rules_len")]
     rules: Vec<ValveRule>,
 }
 
-#[derive(ProtocolField)]
+#[derive(Dissect)]
 struct ValveRule {
     name: DelimString,
     value: DelimString,

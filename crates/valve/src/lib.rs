@@ -1,5 +1,5 @@
-use wsdf::tap::{Field, Offset, Packet};
-use wsdf::{Dispatch, Protocol, ProtocolField};
+use wsdf::tap::{Field, FieldsLocal};
+use wsdf::{Dissect, Proto};
 
 wsdf::version!("0.0.1", 4, 2);
 
@@ -14,54 +14,55 @@ use info::{ValveRequestInfo, ValveResponseInfo};
 use players::{ValveRequestPlayers, ValveResponsePlayers};
 use rules::{ValveRequestRules, ValveResponseRules};
 
-#[derive(Protocol)]
+wsdf::protocol!(Valve);
+
+#[derive(Proto, Dissect)]
 #[wsdf(proto_desc = "Valve query protocol")]
 #[wsdf(proto_name = "Valve query")]
 #[wsdf(proto_filter = "valve")]
 #[wsdf(decode_from = ["udp.payload", ("udp.port", 27015)])]
 struct Valve {
-    #[wsdf(decode_with = "decode_header")]
+    #[wsdf(save, decode_with = "decode_header")]
     header: u32,
-    #[wsdf(dispatch_field = "header")]
+    #[wsdf(get_variant = "get_format_variant")]
     payload: ValveResponseFormat,
 }
 
-#[derive(ProtocolField, Dispatch)]
+#[derive(Dissect)]
 enum ValveResponseFormat {
     Simple(ValvePayload),
     Split(ValveResponseSplit),
-    Unknown,
+    UnknownFormat,
 }
 
-impl ValveResponseFormat {
-    fn dispatch_header(header: &u32) -> ValveResponseFormatDispatch {
-        use ValveResponseFormatDispatch::*;
-        match *header {
-            0xffffffff => Simple,
-            0xfeffffff => Split,
-            _ => Unknown,
-        }
+fn get_format_variant(FieldsLocal(fields): FieldsLocal) -> &'static str {
+    let header = fields.get_u32("header").unwrap();
+    match *header {
+        0xffffffff => "Simple",
+        0xfeffffff => "Split",
+        _ => "UnknownFormat",
     }
 }
 
-#[derive(ProtocolField)]
+#[derive(Dissect)]
 struct ValveResponseSplit {
-    #[wsdf(save)]
     id: u32,
     total: u8,
     number: u8,
     size: u16,
+    //#[wsdf(subdissector = "valve.payload")]
+    //payload: Vec<u8>,
 }
 
-#[derive(ProtocolField)]
+#[derive(Dissect)]
 struct ValvePayload {
-    #[wsdf(decode_with = "decode_kind")]
+    #[wsdf(save, decode_with = "decode_kind")]
     kind: u8,
-    #[wsdf(dispatch_field = "kind")]
+    #[wsdf(get_variant = "get_response_variant")]
     payload: ValveResponse,
 }
 
-#[derive(ProtocolField, Dispatch)]
+#[derive(Dissect)]
 enum ValveResponse {
     InfoRequest(ValveRequestInfo),
     InfoResponse(ValveResponseInfo),
@@ -70,7 +71,7 @@ enum ValveResponse {
     RulesRequest(ValveRequestRules),
     RulesResponse(ValveResponseRules),
     ChallengeResponse(ValveResponseChallenge),
-    Unknown,
+    UnknownResponse,
 }
 
 fn decode_kind(Field(kind): Field<u8>) -> &'static str {
@@ -90,19 +91,17 @@ fn decode_kind(Field(kind): Field<u8>) -> &'static str {
     }
 }
 
-impl ValveResponse {
-    fn dispatch_kind(kind: &u8) -> ValveResponseDispatch {
-        use ValveResponseDispatch::*;
-        match *kind {
-            0x54 => InfoRequest,
-            0x49 => InfoResponse,
-            0x55 => PlayersRequest,
-            0x44 => PlayersResponse,
-            0x56 => RulesRequest,
-            0x45 => RulesResponse,
-            0x41 => ChallengeResponse,
-            _ => Unknown,
-        }
+fn get_response_variant(FieldsLocal(fields): FieldsLocal) -> &'static str {
+    let kind = fields.get_u8("kind").unwrap();
+    match *kind {
+        0x54 => "InfoRequest",
+        0x49 => "InfoResponse",
+        0x55 => "PlayersRequest",
+        0x44 => "PlayersResponse",
+        0x56 => "RulesRequest",
+        0x45 => "RulesResponse",
+        0x41 => "ChallengeResponse",
+        _ => "UnknownResponse",
     }
 }
 
